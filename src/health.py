@@ -40,8 +40,15 @@ class Health(BaseHTTPRequestHandler):
             return self.response(404, path + " not found")
 
     def get_temp(self):
-        temp = open("/sys/class/thermal/thermal_zone0/temp", "r").readline()
-        return {"thermal_zone0": int(temp)/1000}
+        temps = {}
+
+        for dirname, dirnames, _ in os.walk("/sys/class/thermal/"):
+            for zone in dirnames:
+                if zone.startswith("thermal_zone"):
+                   temp = open(os.path.join(dirname, zone, "temp"), "r").readline()
+                   temps[zone] = int(temp)/1000
+
+        return temps
 
     def get_load(self):
         load = open("/proc/loadavg", "r").readline()
