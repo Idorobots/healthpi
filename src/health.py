@@ -63,6 +63,6 @@ class Health(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(sys.argv[1])
-    server = HTTPServer(("localhost", port), Health)
+    server = HTTPServer(("", port), Health)
     print("Health server started on port ", port)
     server.serve_forever()
