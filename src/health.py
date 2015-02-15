@@ -18,17 +18,26 @@ class Health(BaseHTTPRequestHandler):
 
         self.wfile.write(bytes(json.dumps(wrapped_body), "utf-8"))
 
+    def fixed_path(self):
+        if self.path.endswith("/"):
+           return self.path
+
+        else:
+            return self.path + "/"
+
     def do_GET(self):
         endpoints = {"/temp/": self.get_temp,
                      "/load/": self.get_load,
                      "/memory/": self.get_memory,
                      "/": lambda: {"endpoints": list(endpoints)}}
 
-        if self.path in endpoints:
-            return self.response(200, endpoints[self.path]())
+        path = self.fixed_path()
+
+        if path in endpoints:
+            return self.response(200, endpoints[path]())
 
         else:
-            return self.response(404, "Not found")
+            return self.response(404, path + " not found")
 
     def get_temp(self):
         temp = open("/sys/class/thermal/thermal_zone0/temp", "r").readline()
