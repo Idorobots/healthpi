@@ -17,7 +17,7 @@ def check_health(url, optlist):
 
         print("#######", url, "#######")
 
-        endpoints = result["result"]["endpoints"]
+        endpoints = sorted(result["result"]["endpoints"])
         allowed = "--endpoints" in optlist and re.split(",", optlist["--endpoints"]) or endpoints
 
         for endpoint in endpoints:
@@ -37,7 +37,7 @@ def check_endpoint(url, endpoint):
         else:
             print(endpoint, ":")
 
-            for stat in result["result"]:
+            for stat in sorted(result["result"]):
                 print("\t", stat, ":", result["result"][stat])
 
     except:
@@ -47,5 +47,5 @@ if __name__ == "__main__":
     optlist, args = getopt.getopt(sys.argv[1:], "", ["endpoints="])
     optlist = dict(optlist)
 
-    for url in args:
+    for url in sorted(args):
         check_health("http://" + url, optlist)
