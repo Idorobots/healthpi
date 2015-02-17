@@ -1,5 +1,7 @@
 #! /bin/env python
 
+import daemon
+import getopt
 import json
 import os
 import re
@@ -70,8 +72,35 @@ class Health(BaseHTTPRequestHandler):
 
         return memory
 
-if __name__ == "__main__":
-    port = int(sys.argv[1])
-    server = HTTPServer(("", port), Health)
+def run_server(options, args):
+    port = int(args[0])
+
     print("Health server started on port ", port)
-    server.serve_forever()
+    HTTPServer(("", port), Health).serve_forever()
+
+class HealthDaemon(daemon.daemon):
+    def run(self):
+        run_server({}, [8000])
+
+if __name__ == "__main__":
+    optlist, args = getopt.getopt(sys.argv[1:], "", "daemon=")
+    optlist = dict(optlist)
+
+    if "--daemon" in optlist:
+        daemon = HealthDaemon("/tmp/health-daemon.pid")
+        action = optlist["--daemon"]
+
+        if action == "start":
+            daemon.start()
+
+        elif action == "stop":
+            daemon.stop()
+
+        elif action == "restart":
+            daemon.restart()
+
+        else:
+            print("Unknown action", action)
+
+    else:
+        run_server(optlist, args)
