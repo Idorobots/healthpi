@@ -2,13 +2,13 @@
 
 import daemon
 import getopt
+import http.server
 import json
 import os
 import re
 import sys
-from http.server import BaseHTTPRequestHandler, HTTPServer
 
-class Health(BaseHTTPRequestHandler):
+class Health(http.server.BaseHTTPRequestHandler):
     def response(self, code, body):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -24,7 +24,7 @@ class Health(BaseHTTPRequestHandler):
 
     def fixed_path(self):
         if self.path.endswith("/"):
-           return self.path
+            return self.path
 
         else:
             return self.path + "/"
@@ -49,8 +49,8 @@ class Health(BaseHTTPRequestHandler):
         for dirname, dirnames, _ in os.walk("/sys/class/thermal/"):
             for zone in dirnames:
                 if zone.startswith("thermal_zone"):
-                   temp = open(os.path.join(dirname, zone, "temp"), "r").readline()
-                   temps[zone] = int(temp)/1000
+                    temp = open(os.path.join(dirname, zone, "temp"), "r").readline()
+                    temps[zone] = int(temp)/1000
 
         return temps
 
@@ -76,7 +76,7 @@ def run_server(options, args):
     port = int(args[0])
 
     print("Health server started on port ", port)
-    HTTPServer(("", port), Health).serve_forever()
+    http.server.HTTPServer(("", port), Health).serve_forever()
 
 class HealthDaemon(daemon.daemon):
     def run(self):
