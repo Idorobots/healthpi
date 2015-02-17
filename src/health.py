@@ -33,6 +33,7 @@ class Health(http.server.BaseHTTPRequestHandler):
         endpoints = {"/temp/": self.get_temp,
                      "/load/": self.get_load,
                      "/memory/": self.get_memory,
+                     "/uptime/": self.get_uptime,
                      "/": lambda: {"endpoints": list(endpoints)}}
 
         path = self.fixed_path()
@@ -42,6 +43,12 @@ class Health(http.server.BaseHTTPRequestHandler):
 
         else:
             return self.response(404, path + " not found")
+
+    def get_uptime(self):
+        time = open("/proc/uptime").readline()
+        times = re.split(" ", time)
+        return {"uptime": float(times[0]),
+                "idle": float(times[1])}
 
     def get_temp(self):
         temps = {}
