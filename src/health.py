@@ -6,6 +6,7 @@ import http.server
 import json
 import os
 import re
+import ssl
 import sys
 
 class Health(http.server.BaseHTTPRequestHandler):
@@ -80,22 +81,31 @@ class Health(http.server.BaseHTTPRequestHandler):
         return memory
 
 def run_server(options, args):
-    port = int(args[0])
+    port = int(options["--port"])
 
     print("Health server started on port ", port)
-    http.server.HTTPServer(("", port), Health).serve_forever()
+    server = http.server.HTTPServer(("", port), Health)
 
-class HealthDaemon(daemon.daemon):
+    if "--ssl-cert" in options:
+       server.socket = ssl.wrap_socket(server.socket, certfile=options["--ssl-cert"], server_side=True)
+
+    server.serve_forever()
+
+class HealthDaemon(daemon.Daemon):
+    def __init__(self, pidfile, options):
+        super(HealthDaemon, self).__init__(pidfile)
+        self.options = options
+
     def run(self):
-        run_server({}, [8000])
+        run_server(self.options, [])
 
 if __name__ == "__main__":
-    optlist, args = getopt.getopt(sys.argv[1:], "", "daemon=")
-    optlist = dict(optlist)
+    optlist, args = getopt.getopt(sys.argv[1:], "", ["daemon=", "ssl-cert=", "port="])
+    options = dict(optlist)
 
-    if "--daemon" in optlist:
-        daemon = HealthDaemon("/tmp/health-daemon.pid")
-        action = optlist["--daemon"]
+    if "--daemon" in options:
+        daemon = HealthDaemon("/tmp/health-daemon.pid", options)
+        action = options["--daemon"]
 
         if action == "start":
             daemon.start()
@@ -110,4 +120,4 @@ if __name__ == "__main__":
             print("Unknown action", action)
 
     else:
-        run_server(optlist, args)
+        run_server(options, args)

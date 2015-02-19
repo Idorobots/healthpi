@@ -9,7 +9,7 @@ import sys
 
 def check_health(url, optlist):
     try:
-        result = requests.get(url).json()
+        result = requests.get(url, verify = False).json()
 
         if result["status"] == "error":
             print(url, "check failed!")
@@ -29,7 +29,7 @@ def check_health(url, optlist):
 
 def check_endpoint(url, endpoint):
     try:
-        result = requests.get(url + endpoint).json()
+        result = requests.get(url + endpoint, verify = False).json()
 
         if result["status"] == "error":
             print(endpoint, "check failed!")
@@ -45,7 +45,7 @@ def check_endpoint(url, endpoint):
 
 if __name__ == "__main__":
     optlist, args = getopt.getopt(sys.argv[1:], "", ["endpoints="])
-    optlist = dict(optlist)
+    options = dict(optlist)
 
     for url in sorted(args):
-        check_health("http://" + url, optlist)
+        check_health(url, options)
