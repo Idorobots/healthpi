@@ -15,7 +15,7 @@ def check_health(url, optlist):
             print(url, "check failed!")
             return
 
-        print("#######", url, "#######")
+        print(url)
 
         endpoints = sorted(result["result"]["endpoints"])
         allowed = "--endpoints" in optlist and re.split(",", optlist["--endpoints"]) or endpoints
@@ -32,16 +32,22 @@ def check_endpoint(url, endpoint):
         result = requests.get(url + endpoint, verify = False).json()
 
         if result["status"] == "error":
-            print(endpoint, "check failed!")
+            print(url + endpoint, "check failed!")
 
         else:
-            print(endpoint, ":")
-
-            for stat in sorted(result["result"]):
-                print("\t", stat, ":", result["result"][stat])
+            print_value(endpoint, result["result"])
 
     except:
-        print(endpoint, "unreachable!")
+        print(url + endpoint, "unreachable!")
+
+
+def print_value(endpoint, value):
+    if type(value) == type({}):
+        for stat in sorted(value):
+            print_value(endpoint + stat + "/", value[stat])
+
+    else:
+        print("\t", endpoint, "\t", value)
 
 if __name__ == "__main__":
     optlist, args = getopt.getopt(sys.argv[1:], "", ["endpoints="])
