@@ -54,12 +54,12 @@ class Health(http.server.BaseHTTPRequestHandler):
 
     def get_temp(self):
         temps = {}
+        prefix = "/sys/class/thermal/"
 
-        for dirname, dirnames, _ in os.walk("/sys/class/thermal/"):
-            for zone in dirnames:
-                if zone.startswith("thermal_zone"):
-                    temp = open(os.path.join(dirname, zone, "temp"), "r").readline()
-                    temps[zone] = int(temp)/1000
+        for zone in os.listdir(prefix):
+            if zone.startswith("thermal_zone"):
+                temp = open(os.path.join(prefix, zone, "temp")).readline()
+                temps[zone] = int(temp)/1000
 
         return temps
 
@@ -73,7 +73,7 @@ class Health(http.server.BaseHTTPRequestHandler):
     def get_memory(self):
         memory = {}
 
-        for line in open("/proc/meminfo", "r"):
+        for line in open("/proc/meminfo"):
             info = re.split("\s+", line)
             stat = info[0]
             stat = stat[0:len(stat)-1]
@@ -103,7 +103,7 @@ def run_server(options, args):
     server = http.server.HTTPServer(("", port), Health)
 
     if "--ssl-cert" in options:
-       server.socket = ssl.wrap_socket(server.socket, certfile=options["--ssl-cert"], server_side=True)
+        server.socket = ssl.wrap_socket(server.socket, certfile=options["--ssl-cert"], server_side=True)
 
     server.serve_forever()
 
