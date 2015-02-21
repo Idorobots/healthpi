@@ -31,9 +31,10 @@ class Health(http.server.BaseHTTPRequestHandler):
             return self.path + "/"
 
     def do_GET(self):
-        endpoints = {"/temp/": self.get_temp,
-                     "/load/": self.get_load,
+        endpoints = {"/load/": self.get_load,
                      "/memory/": self.get_memory,
+                     "/network/" : self.get_net_stats,
+                     "/temp/": self.get_temp,
                      "/uptime/": self.get_uptime,
                      "/": lambda: {"endpoints": list(endpoints)}}
 
@@ -79,6 +80,21 @@ class Health(http.server.BaseHTTPRequestHandler):
             memory[stat] = 1024 * int(info[1])
 
         return memory
+
+    def get_net_stats(self):
+        net = {}
+        prefix = "/sys/class/net/"
+
+        for interface in os.listdir(prefix):
+            stats = {}
+            path = os.path.join(prefix, interface, "statistics")
+
+            for name in os.listdir(path):
+                stats[name] = int(open(os.path.join(path, name)).readline())
+
+            net[interface] = stats
+
+        return net
 
 def run_server(options, args):
     port = int(options["--port"])
