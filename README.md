@@ -18,3 +18,10 @@ Start it using SSL:
 $ src/health.py --ssl-cert certfile.pem --port PORT --daemon start
 $ src/check.py https://localhost:PORT
 ```
+
+Use Basic Authorization:
+
+```
+$ src/health.py --auth USER:PASSWORD --port PORT --daemon start
+$ src/check.py --auth USER:PASSWORD https://localhost:PORT
+```

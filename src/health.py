@@ -1,5 +1,6 @@
 #! /bin/env python
 
+import base64
 import daemon
 import getopt
 import http.server
@@ -13,6 +14,9 @@ def run_server(options, args):
 
     print("Health server started on port", port)
     health = http.server.HTTPServer(("", port), server.Health)
+
+    if "--auth" in options:
+        health.auth = base64.b64encode(bytes(options["--auth"], "utf-8")).decode("ascii")
 
     if "--ssl-cert" in options:
         health.socket = ssl.wrap_socket(health.socket, certfile=options["--ssl-cert"], server_side=True)
@@ -29,7 +33,7 @@ class HealthDaemon(daemon.Daemon):
         run_server(self.options, [])
 
 if __name__ == "__main__":
-    optlist, args = getopt.getopt(sys.argv[1:], "", ["daemon=", "ssl-cert=", "port="])
+    optlist, args = getopt.getopt(sys.argv[1:], "", ["daemon=", "ssl-cert=", "port=", "auth="])
     options = dict(optlist)
 
     if "--daemon" in options:

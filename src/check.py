@@ -6,10 +6,17 @@ import re
 import requests
 import sys
 
+def request_args(options):
+    kwargs = {"verify": False}
 
-def check_health(url, optlist):
+    if "--auth" in options:
+        kwargs["auth"] = options["--auth"]
+
+    return kwargs
+
+def check_health(url, options):
     try:
-        result = requests.get(url, verify = False).json()
+        result = requests.get(url, **request_args(options)).json()
 
         if result["status"] == "error":
             print(url, "check failed!")
@@ -18,18 +25,18 @@ def check_health(url, optlist):
         print(url)
 
         endpoints = sorted(result["result"]["endpoints"])
-        allowed = "--endpoints" in optlist and re.split(",", optlist["--endpoints"]) or endpoints
+        allowed = "--endpoints" in options and options["--endpoints"] or endpoints
 
         for endpoint in endpoints:
             if endpoint != "/" and endpoint in allowed:
-                check_endpoint(url, endpoint)
+                check_endpoint(url, endpoint, options)
 
     except:
         print(url, "unreachable!")
 
-def check_endpoint(url, endpoint):
+def check_endpoint(url, endpoint, options):
     try:
-        result = requests.get(url + endpoint, verify = False).json()
+        result = requests.get(url + endpoint, **request_args(options)).json()
 
         if result["status"] == "error":
             print(url + endpoint, "check failed!")
@@ -50,8 +57,14 @@ def print_value(endpoint, value):
         print("\t", endpoint, "\t", value)
 
 if __name__ == "__main__":
-    optlist, args = getopt.getopt(sys.argv[1:], "", ["endpoints="])
+    optlist, args = getopt.getopt(sys.argv[1:], "", ["endpoints=", "auth="])
     options = dict(optlist)
+
+    if "--endpoints" in options:
+        options["--endpoints"] = re.split(",", options["--endpoints"])
+
+    if "--auth" in options:
+        options["--auth"] = tuple(re.split(":", options["--auth"]))
 
     for url in sorted(args):
         check_health(url, options)
