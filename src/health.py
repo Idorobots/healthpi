@@ -10,6 +10,10 @@ import ssl
 import sys
 
 class Health(http.server.BaseHTTPRequestHandler):
+    def __init__(self, request, address, server):
+        super(Health, self).__init__(request, address, server)
+        self.server = server
+
     def response(self, code, body):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
@@ -77,17 +81,35 @@ class Health(http.server.BaseHTTPRequestHandler):
         for line in open("/proc/stat"):
             if line.startswith("cpu"):
                 stats = re.split("\s+", line)
-                cpu[stats[0]] = {"user": int(stats[1]),
-                                 "nice": int(stats[2]),
-                                 "system": int(stats[3]),
-                                 "idle": int(stats[4]),
-                                 "iowait": int(stats[5]),
-                                 "irq": int(stats[6]),
-                                 "softirq": int(stats[7])}
+                name = stats[0]
+                stats = {"user": int(stats[1]),
+                         "nice": int(stats[2]),
+                         "system": int(stats[3]),
+                         "idle": int(stats[4]),
+                         "iowait": int(stats[5]),
+                         "irq": int(stats[6]),
+                         "softirq": int(stats[7])}
+
+                if name in self.server.cpu:
+                    prev = self.server.cpu[name]
+                    user = stats["user"] + stats["nice"]
+                    prev_user = prev["user"] + prev["nice"]
+                    total = (user + stats["system"] + stats["idle"])
+                    prev_total = (prev_user + prev["system"] + prev["idle"])
+                    denominator = (total - prev_total) / 100
+                    stats["usage"] = {"user": round((user - prev_user) / denominator),
+                                      "system": round((stats["system"] - prev["system"]) / denominator),
+                                      "io": round((stats["iowait"] - prev["iowait"]) / denominator)}
+
+                else:
+                    stats["usage"] = None
+
+                cpu[name] = stats
 
             else:
                 break
 
+        self.server.cpu = cpu
         return cpu
 
     def get_memory(self):
@@ -125,6 +147,7 @@ def run_server(options, args):
     if "--ssl-cert" in options:
         server.socket = ssl.wrap_socket(server.socket, certfile=options["--ssl-cert"], server_side=True)
 
+    server.cpu = {} # NOTE Hacked in as a cache for CPU usage computation.
     server.serve_forever()
 
 class HealthDaemon(daemon.Daemon):
