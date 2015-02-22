@@ -31,7 +31,8 @@ class Health(http.server.BaseHTTPRequestHandler):
             return self.path + "/"
 
     def do_GET(self):
-        endpoints = {"/load/": self.get_load,
+        endpoints = {"/cpu/": self.get_cpu_usage,
+                     "/load/": self.get_load,
                      "/memory/": self.get_memory,
                      "/network/" : self.get_net_stats,
                      "/temp/": self.get_temp,
@@ -69,6 +70,25 @@ class Health(http.server.BaseHTTPRequestHandler):
         return {"1min": float(loads[0]),
                 "5min": float(loads[1]),
                 "15min": float(loads[2])}
+
+    def get_cpu_usage(self):
+        cpu = {}
+
+        for line in open("/proc/stat"):
+            if line.startswith("cpu"):
+                stats = re.split("\s+", line)
+                cpu[stats[0]] = {"user": int(stats[1]),
+                                 "nice": int(stats[2]),
+                                 "system": int(stats[3]),
+                                 "idle": int(stats[4]),
+                                 "iowait": int(stats[5]),
+                                 "irq": int(stats[6]),
+                                 "softirq": int(stats[7])}
+
+            else:
+                break
+
+        return cpu
 
     def get_memory(self):
         memory = {}
