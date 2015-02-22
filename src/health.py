@@ -41,7 +41,7 @@ class Health(http.server.BaseHTTPRequestHandler):
                      "/network/" : self.get_net_stats,
                      "/temp/": self.get_temp,
                      "/uptime/": self.get_uptime,
-                     "/": lambda: {"endpoints": list(endpoints)}}
+                     "/": lambda: {"endpoints": list(sorted(endpoints))}}
 
         path = self.fixed_path()
 
@@ -141,7 +141,7 @@ class Health(http.server.BaseHTTPRequestHandler):
 def run_server(options, args):
     port = int(options["--port"])
 
-    print("Health server started on port ", port)
+    print("Health server started on port", port)
     server = http.server.HTTPServer(("", port), Health)
 
     if "--ssl-cert" in options:
