@@ -11,6 +11,8 @@ class Health(http.server.BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("WWW-Authenticate", "Basic realm=\"Health\"")
         self.send_header("Content-Type", "application/json")
+        if self.server.refresh and code // 100 == 2:
+            self.send_header("Refresh", self.server.refresh)
         self.end_headers()
 
         wrapped_body = {"status" : "ok",

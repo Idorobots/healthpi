@@ -15,6 +15,8 @@ def run_server(options, args):
     print("Health server started on port", port)
     health = http.server.HTTPServer(("", port), server.Health)
 
+    health.refresh = "--refresh" in options and options["--refresh"] or None
+
     if "--auth" in options:
         health.auth = base64.b64encode(bytes(options["--auth"], "utf-8")).decode("ascii")
 
@@ -33,7 +35,7 @@ class HealthDaemon(daemon.Daemon):
         run_server(self.options, [])
 
 if __name__ == "__main__":
-    optlist, args = getopt.getopt(sys.argv[1:], "", ["daemon=", "ssl-cert=", "port=", "auth="])
+    optlist, args = getopt.getopt(sys.argv[1:], "", ["daemon=", "ssl-cert=", "port=", "auth=", "refresh="])
     options = dict(optlist)
 
     if "--daemon" in options:
