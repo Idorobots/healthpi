@@ -24,7 +24,7 @@ class Health(http.server.BaseHTTPRequestHandler):
         self.wfile.write(bytes(json.dumps(wrapped_body), "utf-8"))
 
     def authorized(self):
-        return self.headers["Authorization"] == "Basic " + self.server.auth
+        return not self.server.auth or self.headers["Authorization"] == "Basic " + self.server.auth
 
     def do_GET(self):
         if not self.authorized():

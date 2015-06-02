@@ -17,8 +17,8 @@ def run_server(options, args):
 
     health.refresh = "--refresh" in options and options["--refresh"] or None
 
-    if "--auth" in options:
-        health.auth = base64.b64encode(bytes(options["--auth"], "utf-8")).decode("ascii")
+    encode = lambda data: base64.b64encode(bytes(data, "utf-8")).decode("ascii")
+    health.auth = "--auth" in options and encode(options["--auth"]) or None
 
     if "--ssl-cert" in options:
         health.socket = ssl.wrap_socket(health.socket, certfile=options["--ssl-cert"], server_side=True)
