@@ -11,6 +11,8 @@ class Health(http.server.BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("WWW-Authenticate", "Basic realm=\"Health\"")
         self.send_header("Content-Type", "application/json")
+        if self.server.refresh and code // 100 == 2:
+            self.send_header("Refresh", self.server.refresh)
         self.end_headers()
 
         wrapped_body = {"status" : "ok",
@@ -22,7 +24,7 @@ class Health(http.server.BaseHTTPRequestHandler):
         self.wfile.write(bytes(json.dumps(wrapped_body), "utf-8"))
 
     def authorized(self):
-        return self.headers["Authorization"] == "Basic " + self.server.auth
+        return not self.server.auth or self.headers["Authorization"] == "Basic " + self.server.auth
 
     def do_GET(self):
         if not self.authorized():
