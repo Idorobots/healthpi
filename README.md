@@ -12,6 +12,23 @@ $ src/health.py --port PORT --daemon start
 $ src/check.py http://localhost:PORT
 ```
 
+Or run it through systemd:
+
+```
+[Unit]
+Description=Health monitoring service for the Raspberry Pi.
+After=syslog.target network.target
+
+[Service]
+Type=forking
+ExecStart=/path/to/healthpi/src/health.py --port=PORT --daemon restart
+PIDFile=/tmp/health-daemon.pid
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
 Start it using SSL:
 
 ```
